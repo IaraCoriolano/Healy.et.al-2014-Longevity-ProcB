@@ -2,18 +2,18 @@
 #Randomly binds trees together
 ##########################
 #Randomly binds trees together with a provided number of trees and a root age.
-#v1.0
+#v1.1
+#Update: removed verbose option (useless)
 ##########################
 #SYNTAX :
 #<x,y> two phylo or multiPhylo objects
 #<sample> the number of trees to create
 #<root.age> the age of the root where both trees are combined (can be any unit)
-#<verbose> whether to be verbose or not (default = FALSE)
 #----
 #guillert(at)tcd.ie - 06/08/2014
 ##########################
 
-rTreeBind<-function(x, y, sample, root.age, verbose=FALSE) {
+rTreeBind<-function(x, y, sample, root.age) {
 
 #HEADER
     require(ape)
@@ -86,12 +86,6 @@ rTreeBind<-function(x, y, sample, root.age, verbose=FALSE) {
         stop("\"root.age\" argument must be numeric.")
     }
 
-
-    #verbose
-    if (class(verbose) != 'logical') {
-        stop("\"verbose\" argument must be logical.")
-    }
-
 #FUNCTION
 
     FUN.sample.trees<-function(tree, sample, replace) {
@@ -106,7 +100,7 @@ rTreeBind<-function(x, y, sample, root.age, verbose=FALSE) {
         return(phy)
     }
 
-    FUN.rand.bind<-function(x, y, x.single.tree, y.single.tree, sample, replace.x, replace.y, root.age, verbose){
+    FUN.rand.bind<-function(x, y, x.single.tree, y.single.tree, sample, replace.x, replace.y, root.age){
         #Creating a empty multiPhylo object
         z<-rmtree(sample,2)
 
@@ -136,9 +130,6 @@ rTreeBind<-function(x, y, sample, root.age, verbose=FALSE) {
                 #z[[n]]<-bind.tree( FUN.root.edge(x[[randX[n]]], root.age ), FUN.root.edge(y, root.age), where="root", position=root.age-max(node.depth.edgelength(y)) )
             } 
 
-            if(verbose == TRUE) {
-                cat("tree", n, "-", format(Sys.time(), "%H:%M:%S"), "\n")
-            }
         }
 
         if(length(z) != 1) {
@@ -152,7 +143,7 @@ rTreeBind<-function(x, y, sample, root.age, verbose=FALSE) {
 
 #RANDOMLY BINDING THE TREES
 
-    tree<-FUN.rand.bind(x, y, x.single.tree, y.single.tree, sample, replace.x, replace.y, root.age, verbose)
+    tree<-FUN.rand.bind(x, y, x.single.tree, y.single.tree, sample, replace.x, replace.y, root.age)
 
 #OUTPUT
 
