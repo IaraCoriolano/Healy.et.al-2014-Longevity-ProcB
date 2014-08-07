@@ -2,15 +2,16 @@
 #Randomly binds trees together
 ##########################
 #Randomly binds trees together with a provided number of trees and a root age.
-#v1.1
+#v1.2
 #Update: removed verbose option (useless)
+#Update: fixed randY
 ##########################
 #SYNTAX :
 #<x,y> two phylo or multiPhylo objects
 #<sample> the number of trees to create
 #<root.age> the age of the root where both trees are combined (can be any unit)
 #----
-#guillert(at)tcd.ie - 06/08/2014
+#guillert(at)tcd.ie - 07/08/2014
 ##########################
 
 rTreeBind<-function(x, y, sample, root.age) {
@@ -111,7 +112,7 @@ rTreeBind<-function(x, y, sample, root.age) {
         #Binding the trees together by adding the root.age
         for (n in 1:sample) {
             if(x.single.tree == FALSE & y.single.tree == FALSE) {
-                z[[n]]= FUN.root.edge(x[[randX[n]]], root.age ) + FUN.root.edge(y[[randX[n]]], root.age )
+                z[[n]]= FUN.root.edge(x[[randX[n]]], root.age ) + FUN.root.edge(y[[randY[n]]], root.age )
                 #z[[n]]<-bind.tree( FUN.root.edge(x[[randX[n]]], root.age ), FUN.root.edge(y[[randX[n]]], root.age ) ,where="root", position=root.age-max(node.depth.edgelength(y[[randX[n]]])) )
             } 
 
@@ -121,7 +122,7 @@ rTreeBind<-function(x, y, sample, root.age) {
             } 
 
             if(x.single.tree == TRUE & y.single.tree == FALSE) {
-                z[[n]]= FUN.root.edge(x, root.age ) + FUN.root.edge(y[[randX[n]]], root.age )
+                z[[n]]= FUN.root.edge(x, root.age ) + FUN.root.edge(y[[randY[n]]], root.age )
                 #z[[n]]<-bind.tree( FUN.root.edge(x, root.age ), FUN.root.edge(y[[randY[n]]], root.age ) ,where="root", position=root.age-max(node.depth.edgelength(y[[randX[n]]])) )
             } 
 
