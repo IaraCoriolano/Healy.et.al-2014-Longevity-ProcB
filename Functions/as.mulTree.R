@@ -104,6 +104,9 @@ as.mulTree<-function(data, trees, species) {
 
     #renaming the species column in the data.frame
     names(data)<-sub(species,"sp.col",names(data))
+    #adding the 'animal' column for MCMCglmm() random effect
+    data["animal"]<-NA
+    data$animal<-data.frame$sp.col
 
     #Testing if the data and the trees can be used in comparative.data() and creating the 'multiT' list
     if(FUN.comparative.data.test(data, trees, is.multiphylo) == TRUE) {
