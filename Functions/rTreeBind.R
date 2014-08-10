@@ -2,16 +2,17 @@
 #Randomly binds trees together
 ##########################
 #Randomly binds trees together with a provided number of trees and a root age.
-#v1.2
+#v1.2.1
 #Update: removed verbose option (useless)
 #Update: fixed randY
+#Update: added example
 ##########################
 #SYNTAX :
 #<x,y> two phylo or multiPhylo objects
 #<sample> the number of trees to create
 #<root.age> the age of the root where both trees are combined (can be any unit)
 #----
-#guillert(at)tcd.ie - 07/08/2014
+#guillert(at)tcd.ie - 10/08/2014
 ##########################
 
 rTreeBind<-function(x, y, sample, root.age) {
@@ -151,4 +152,12 @@ rTreeBind<-function(x, y, sample, root.age) {
     return(tree)
 
 #End
+}
+
+#Example
+rTreeBind.example=FALSE
+if(rTreeBind.example == TRUE){
+    x<-rmtree(10,5) ; y<-rmtree(5,5)
+    #Combines 2 randomly chosen trees from x and from y into z putting the root age at 12.
+    z<-rTreeBind(x, y , sample=2, root.age=12)
 }
