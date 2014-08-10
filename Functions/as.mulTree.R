@@ -3,14 +3,16 @@
 ##########################
 #Combines a table and a multiple phylogenies using comparative.data{caper} function.
 #Changes the name of the species column into "sp.col" to be read by comparative.data
-#v0.1
+#v0.1.1
+#Update: added the 'animal' column
+#Update: added example
 ##########################
 #SYNTAX :
 #<data> any table ("data.frame" or "matrix" object) containing at least two variable and species names
 #<trees> a "multiPhylo" object
 #<species> either the name or the number of the column containing the list of species in the data
 #----
-#guillert(at)tcd.ie - 06/08/2014
+#guillert(at)tcd.ie - 10/08/2014
 ##########################
 
 as.mulTree<-function(data, trees, species) {
@@ -83,9 +85,9 @@ as.mulTree<-function(data, trees, species) {
     FUN.comparative.data.test<-function(data, trees, is.multiphylo){
 
         if(is.multiphylo == TRUE) {
-            test<-try(comparative.data(trees[[1]], data, names.col="sp.col", vcv=FALSE), silent=TRUE) #see comment in the BUILDING THE "multiT" OBJECT LIST section
+            test<-try(comparative.data(trees[[1]], data, names.col="sp.col", vcv=FALSE), silent=TRUE) #see comment in the BUILDING THE "mulTree" OBJECT LIST section
         } else {
-            test<-try(comparative.data(trees, data, names.col="sp.col", vcv=FALSE), silent=TRUE) #see comment in the BUILDING THE "multiT" OBJECT LIST section
+            test<-try(comparative.data(trees, data, names.col="sp.col", vcv=FALSE), silent=TRUE) #see comment in the BUILDING THE "mulTree" OBJECT LIST section
         }
 
         if(class(test) == "comparative.data") {
@@ -96,7 +98,7 @@ as.mulTree<-function(data, trees, species) {
         return(try.comp.data)
     }
 
-#BUILDING THE "multiT" OBJECT LIST
+#BUILDING THE "mulTree" OBJECT LIST
 
     #because of the weird way comparative.data() deals with it's arguments (names.col <- as.character(substitute(names.col))),
     #species as to be replaced by just "sp.col" instead of the more cleaner way :
@@ -106,17 +108,28 @@ as.mulTree<-function(data, trees, species) {
     names(data)<-sub(species,"sp.col",names(data))
     #adding the 'animal' column for MCMCglmm() random effect
     data["animal"]<-NA
-    data$animal<-data.frame$sp.col
+    data$animal<-data$sp.col
 
-    #Testing if the data and the trees can be used in comparative.data() and creating the 'multiT' list
+    #Testing if the data and the trees can be used in comparative.data() and creating the 'mulTree' list
     if(FUN.comparative.data.test(data, trees, is.multiphylo) == TRUE) {
         species.column<-paste("renamed column '", species, "' into 'sp.col'", sep="")
         output<-list(phy=trees, data=data, species.column=species.column)
         class(output)<-'mulTree'
         return(output)
     } else {
-        cat("Impossible to use comparative.data() on the given data and trees")
+        cat("Impossible to use comparative.data() on the given data and trees.")
     }
 
 #End
+}
+
+#Example
+as.mulTree.example=FALSE
+if(as.mulTree.example == TRUE){
+    #Creates a data.frame
+    data_table<-data.frame(taxa=LETTERS[1:5], var1=rnorm(5), var2=c(rep('a',2), rep('b',3)))
+    #Creates a list of trees
+    trees_list<-list() ; for (i in 1:5) {trees_list[[i]]<-rcoal(5, tip.label=LETTERS[1:5])} ; class(trees_list)<-'multiPhylo'
+    #Creates the "mulTree" object
+    mulTree_data<-as.mulTree(data_table, trees_list, species="taxa")
 }
