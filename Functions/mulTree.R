@@ -1,11 +1,11 @@
 ##########################
-#Run MCMCglmm on a 'mulTree' object
+#Run MCMCglmm on a 'mulTree.data' object
 ##########################
-#Running a MCMCglmm model on a list of phylogenies and the data stored in a 'mulTree' object. The results can be written out of R environment as individual models.
-#v0.1
+#Running a MCMCglmm model on a list of phylogenies and the data stored in a 'mulTree.data' object. The results can be written out of R environment as individual models.
+#v0.1.1
 ##########################
 #SYNTAX :
-#<mulTree> a 'mulTree' object obtained from as.mulTree function
+#<mulTree.data> a 'mulTree.data' object obtained from as.mulTree.data function
 #<formula> an object of class 'formula'
 #<chains> the number of independent chains for the mcmc
 #<parameters> a vector of three elements to use as parameters for the mcmc. Should be respectively Number of generations, sampling and burnin.
@@ -17,7 +17,7 @@
 #<output> any optional string of characters that will be used as chain name for the models output (default=FALSE)
 ##########################
 #----
-#guillert(at)tcd.ie & healyke(at)tcd.ie - 07/08/2014
+#guillert(at)tcd.ie & healyke(at)tcd.ie - 10/08/2014
 ##########################
 #Requirements:
 #-R 3
@@ -30,8 +30,9 @@
 ##########################
 
 
-mcmcglmm.mulTree<-function(mulTree, formula, parameters, chains=2, priors=NULL, ...,convergence=1.1, ESS=1000, verbose=FALSE, output=FALSE)
-{stop("IN DEVELOPEMENT")
+mulTree<-function(mulTree.data, formula, parameters, chains=2, priors=NULL, ..., convergence=1.1, ESS=1000, verbose=FALSE, output=TRUE)
+{   #warning("ouput option doesn't accept 'FALSE' yet (change the return format)")
+    #stop("IN DEVELOPEMENT")
 #HEADER
     #libraries
     require(ape)
@@ -39,20 +40,23 @@ mcmcglmm.mulTree<-function(mulTree, formula, parameters, chains=2, priors=NULL, 
     require(mvtnorm)
     require(coda)
     require(modeest)
+    require(MCMCglmm)
+    #timer(start)
+    start.time <- Sys.time()
 
 #DATA
-    #mulTree
-    if(class(mulTree) != 'mulTree') {
-        stop(as.character(substitute(mulTree))," is not a \"mulTree\" object.\nUse as.mulTree() function.", call.=FALSE)
+    #mulTree.data
+    if(class(mulTree.data) != 'mulTree') {
+        stop(as.character(substitute(mulTree.data))," is not a \"mulTree\" object.\nUse as.mulTree.data() function.", call.=FALSE)
     } else {
-        if(length(mulTree) != 3) {
-            stop(as.character(substitute(mulTree))," is not a \"mulTree\" object.\nUse as.mulTree() function.", call.=FALSE)
+        if(length(mulTree.data) != 3) {
+            stop(as.character(substitute(mulTree.data))," is not a \"mulTree\" object.\nUse as.mulTree.data() function.", call.=FALSE)
         } else {
-            if(class(mulTree[[1]]) != 'multiPhylo') {
-                stop(as.character(substitute(mulTree))," is not a \"mulTree\" object.\nUse as.mulTree() function.", call.=FALSE)
+            if(class(mulTree.data[[1]]) != 'multiPhylo') {
+                stop(as.character(substitute(mulTree.data))," is not a \"mulTree\" object.\nUse as.mulTree.data() function.", call.=FALSE)
             } else {
-                if(class(mulTree[[2]]) != 'data.frame') {
-                    stop(as.character(substitute(mulTree))," is not a \"mulTree\" object.\nUse as.mulTree() function.", call.=FALSE)
+                if(class(mulTree.data[[2]]) != 'data.frame') {
+                    stop(as.character(substitute(mulTree.data))," is not a \"mulTree\" object.\nUse as.mulTree.data() function.", call.=FALSE)
                 }
             }
         }
@@ -68,7 +72,14 @@ mcmcglmm.mulTree<-function(mulTree, formula, parameters, chains=2, priors=NULL, 
         stop("\"chains\" must be numeric.", call.=FALSE) 
     } else {
         if(length(chains) != 1) {
-            stop("\"chains\" must be numeric.", call.=FALSE) 
+            stop("\"chains\" must be a single value.", call.=FALSE) 
+        } else {
+            if(chains == 1) {
+                multiple.chains=FALSE
+                warning("Only one chain has been called:\nconvergence test can't be performed.", call.=FALSE)
+            } else {
+                multiple.chains=TRUE
+            }
         }
     }
 
@@ -82,7 +93,7 @@ mcmcglmm.mulTree<-function(mulTree, formula, parameters, chains=2, priors=NULL, 
     }
 
     #priors
-    if(class(priors) == NULL) {
+    if(is.null(priors)) {
         prior.default=TRUE
     } else {
         prior.default=FALSE
@@ -122,7 +133,7 @@ mcmcglmm.mulTree<-function(mulTree, formula, parameters, chains=2, priors=NULL, 
         } else {
             do.output=TRUE
             output="mulTree.out"
-            cat("Analysis output is set to \"mulTree.out\" by default.\nTo modify it, specify the output chain name using:\nmulTree(..., output=<OUTPUT_NAME>, ...)") 
+            cat("Analysis output is set to \"mulTree.out\" by default.\nTo modify it, specify the output chain name using:\nmulTree(..., output=<OUTPUT_NAME>, ...)\n") 
         }
     }
     if(class(output) != 'logical') {
@@ -139,9 +150,10 @@ mcmcglmm.mulTree<-function(mulTree, formula, parameters, chains=2, priors=NULL, 
 #FUNCTION
 
 
-    FUN.MCMCglmm<-function(ntree, mulTree, formula, priors, parameters, ...){
+    FUN.MCMCglmm<-function(ntree, mulTree.data, formula, priors, parameters, ...){
+        require(MCMCglmm)
         #Model running using MCMCglmm function (MCMCglmm) on each tree [i] on two independent chains
-        model<-MCMCglmm(formula, random=~animal, pedigree=mulTree$phy[[ntree]], prior=priors, data=mulTree$data, verbose=FALSE, nitt=parameters[1], thin=parameters[2], burnin=parameters[3], ...)
+        model<-MCMCglmm(formula, random=~animal, pedigree=mulTree.data$phy[[ntree]], prior=priors, data=mulTree.data$data, verbose=FALSE, nitt=parameters[1], thin=parameters[2], burnin=parameters[3], ...)
         return(model)
     }
 
@@ -161,114 +173,127 @@ mcmcglmm.mulTree<-function(mulTree, formula, parameters, chains=2, priors=NULL, 
 #RUNNING THE MODELS
 
     #Creating the list of file names per tree
-    file.names<-vector("list", length(mulTree$phy))
-    for (ntree in (1:length(mulTree$phy))){
+    file.names<-vector("list", length(mulTree.data$phy))
+    for (ntree in (1:length(mulTree.data$phy))){
         file.names[[ntree]]<-paste(output, as.character("_tree"), as.character(ntree), sep="")
     }
     #Adding the chain name
     for (nchains in 1:chains) {
-        file.names.chain<-paste(file.names, as.character("_chain"), as.character(nchains), as.character(".R"), sep="")
+        file.names.chain<-paste(file.names, as.character("_chain"), as.character(nchains), as.character(".rda"), sep="")
         assign(paste("file.names.chain", nchains, sep=""), file.names.chain)
     }
+    #Adding the convergence name
+    file.names.conv<-paste(file.names, as.character("_conv"), as.character(".rda"), sep="")
 
     #Running the models n times for every trees
-    for (ntree in 1:length(mulTree$phy)) {
+    for (ntree in 1:length(mulTree.data$phy)) {
         
         #Running the model for one tree
         for (nchains in 1:chains) {
-            model_chain<-FUN.MCMCglmm(ntree, mulTree, formula, priors, parameters, ...)
+            model_chain<-FUN.MCMCglmm(ntree, mulTree.data, formula, priors, parameters, ...)
             assign(paste("model_chain", nchains, sep=""), model_chain)
         }
 
-        #Testing the convergence for one tree
-        converge.test<-FUN.convergence.test(chains)
-
-        #Saving all the chains for one tree
-        #output?
-        
-        #verbose?
-
-    }
-
-    #Output
-    cat(format(Sys.time(), "%H:%M:%S"), "-", output, "run and saved on all trees","\n")
-    cat("Use SumMultiPGLS function to summarise the output", "\n")
-
-
-for(i in 2:5) {
-  thismodel <- get(paste("model", i, sep=""))
-  rsq <- c(rsq, summary(thismodel)$r.squared)
-} 
-
-
-
-x=1
-
-while (x<100)
-
- {
-   vectorx<- rnorm(100)
-    assign(paste("vector",x,sep=""),vectorx)
-x=x+1
-
-} 
-
-
-for(i in 1:6) { #-- Create objects  'r.1', 'r.2', ... 'r.6' --
-    nam <- paste("r", i, sep = ".")
-    assign(nam, 1:i)
-}
-
-
-
-    for (ntree in 1:length(mulTree$phy)) {
-        
-        for (nchain in 1:chains) {
-            model_chain${nchain}<-FUN.MCMCglmm(ntree, mulTree, formula, priors, parameters, ...)
-        }
-
-    }
-
-save all chains
-
-#OUTPUT
-
-
-#Step 3: RUNNING THE MODELS
-        
-    #running the models (overwriting)
-
-        #Bayesian framework
-            #set up uniformative prior. see Jarrod Hadfield's notes on prior parametrers used. 
-        else { prior<-list(R = list(V = 1/2, nu=0.002), G = list(G1=list(V = 1/2, nu=0.002)))
-            for (i in (1:length(trees))){
-
-                #Model running using MCMCglmm function (MCMCglmm) on each tree [i] on two independent chains
-
-                    #Chain 1
-                    model<-MCMCglmm(formula, random=~animal,pedigree=trees[[i]],prior=prior,data=comparative.data(data=data.frame, phy=trees[[i]], names.col="sp.col", vcv=FALSE)$data,verbose=FALSE,family=c("gaussian"),nitt=ngen,burnin=as.integer(ngen/6),thin=thinn)
-                
-                    #Chain 2
-                    model.1<-MCMCglmm(formula, random=~animal,pedigree=trees[[i]],prior=prior,data=comparative.data(data=data.frame, phy=trees[[i]], names.col="sp.col", vcv=FALSE)$data,verbose=FALSE,family=c("gaussian"),nitt=ngen/50,burnin=as.integer(ngen/300),thin=thinn/50)
-                    
-                    #Convergence check using Gelman and Rubins diagnoses set to return true or false based on level of scale reduction set (default == 1.1)
-                    convergence<-gelman.diag(mcmc.list(as.mcmc(model.1$Sol[1:(length(model.1$Sol[,1])),]),as.mcmc(model$Sol[1:(length(model.1$Sol[,1])),])))
-
-                #Saving the model ran on each tree [i]
-                save(model, file=as.character(file.names[[i]]))
-
-                #Printing the time and the ESS + convergence diagnosis
-                cat(format(Sys.time(), "%H:%M:%S"), "-", output, "on tree", as.character(i), "done", "\n")
-                cat(format(Sys.time(), "%H:%M:%S"), "-", "Effective sample size is >1000:",all(effectiveSize(model$Sol[])>1000), "\n")
-                cat(format(Sys.time(), "%H:%M:%S"), "-", "All levels converged:",all(convergence$psrf[,1]<converge), "\n")
+        #Saving models
+        if(do.output == TRUE) {
+            for (nchains in 1:chains) {
+                model<-get(paste("model_chain",nchains,sep=""))
+                name<-get(paste("file.names.chain",nchains,sep=""))[[ntree]]
+                save(model, file=name)
             }
         }
 
-#Step 4: OUTPUT                     
-    
-    #Output
-    cat(format(Sys.time(), "%H:%M:%S"), "-", output, "run and saved on all trees","\n")
-    cat("Use SumMultiPGLS function to summarise the output", "\n")
+        #Testing the convergence for one tree
+        if(multiple.chains == TRUE) {
+            converge.test<-FUN.convergence.test(chains)
+        }
+
+        #Saving convergence
+        if(do.output == TRUE) {
+            save(converge.test, file=file.names.conv[ntree])
+        }
+
+        #Verbose
+        if(verbose == TRUE) {
+            cat("\n",format(Sys.Date())," - ",format(Sys.time(), "%H:%M:%S"), ":", " MCMCglmm performed on tree ", as.character(ntree),"\n",sep="")
+            if(multiple.chains == TRUE) {
+                cat("Convergence diagnosis:\n")
+                cat("Effective sample size is > ", ESS, ": ", all(effectiveSize(model$Sol[])>ESS), "\n", sep="")
+                effectiveSize(get(paste("model_chain",nchains,sep=""))$Sol[])
+                cat("All levels converged < ", convergence, ": ", all(converge.test$psrf[,1]<convergence), "\n", sep="")
+                converge.test$psrf[,1]
+            }
+            if(do.output == TRUE){
+                if(multiple.chains == TRUE) {
+                    cat("Models saved as ", file.names[[ntree]], "_chain*.rda\n", sep="")
+                    cat("Convergence diagnosis saved as ", file.names.conv[ntree],"\n", sep="")
+                } else {
+                    cat("Model saved as ", file.names[[ntree]], "_chain1.rda\n", sep="")
+                }
+            }          
+        }
+    }
+
+
+#OUTPUT
+
+    #timer (end)
+    end.time <- Sys.time()
+    execution.time<- end.time - start.time
+
+    #verbose
+    if(verbose==TRUE) {
+        cat("\n",format(Sys.Date())," - ",format(Sys.time(), "%H:%M:%S"), ":", " MCMCglmm successfully performed on ", length(mulTree.data$phy), " trees.\n",sep="")
+        if (execution.time[[1]] < 60) {
+            cat("Total execution time: ", execution.time[[1]], " secs.\n", sep="") 
+        } else {
+            if (execution.time[[1]] > 60 & execution.time[[1]] < 3600) {
+                cat("Total execution time: ", execution.time[[1]]/60, " mins.\n", sep="") 
+            } else {
+                if (execution.time[[1]] > 3600 & execution.time[[1]] < 86400) {
+                    cat("Total execution time: ", execution.time[[1]]/3600, " hours.\n", sep="")
+                } else {
+                    if (execution.time[[1]] > 86400) {
+                        cat("Total execution time: ", execution.time[[1]]/86400, " days.\n", sep="")
+                    }
+                }
+            }
+        }
+
+        cat("Use sum.mulTree summarizing and plot.mulTree for plotting the results.\n", sep="")
+    }
 
 #End
+}
+
+#example
+mulTree.example=FALSE
+if(mulTree.example == TRUE) {
+    #DUMMY EXAMPLE
+    data_table<-data.frame(taxa=LETTERS[1:5], var1=rnorm(5), var2=c(rep('a',2), rep('b',3)))
+    #Creates a list of trees
+    trees_list<-list() ; for (i in 1:5) {trees_list[[i]]<-rcoal(5, tip.label=LETTERS[1:5])} ; class(trees_list)<-'multiPhylo'
+    #Creates the "mulTree" object
+    mulTree_data<-as.mulTree(data_table, trees_list, species="taxa")
+    #formula
+    form=var1~var2
+    #parameters
+    param=c(100000, 1000, 25000)
+    #priors
+    prior<-list(R = list(V = 1/2, nu=0.002), G = list(G1=list(V = 1/2, nu=0.002)))
+
+    #mulTree
+    mulTree(mulTree_data, form, param, priors=prior, verbose=TRUE)
+
+    #EMPIRICAL EXAMPLE
+    mam_aves_tres<-read.tree("example/10trees_mammal-aves.tre")
+    long_data<-read.csv("example/425sp_LongevityData.csv")
+    longevity.data<-as.mulTree(long_data, mam_aves_tres, species="species.m")
+    formu<-long.m~BMR + mass.m + volant.m + mass.m:volant.m
+    param<-c(1000, 50, 250)
+    prior<-list(R = list(V = 1/2, nu=0.002), G = list(G1=list(V = 1/2, nu=0.002)))
+    outpu<-"longevity"
+    #mulTree
+    mulTree(longevity.data, formu, param, chains=2, priors, verbose=TRUE, output=outpu)
+
 }
