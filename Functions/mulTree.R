@@ -294,6 +294,6 @@ if(mulTree.example == TRUE) {
     prior<-list(R = list(V = 1/2, nu=0.002), G = list(G1=list(V = 1/2, nu=0.002)))
     outpu<-"longevity"
     #mulTree
-    mulTree(longevity.data, formu, param, chains=2, priors, verbose=TRUE, output=outpu)
+    mulTree(longevity.data, formu, param, chains=2, prior, verbose=TRUE, output=outpu)
 
 }
