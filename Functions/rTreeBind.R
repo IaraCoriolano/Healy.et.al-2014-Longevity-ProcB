@@ -14,6 +14,10 @@
 #----
 #guillert(at)tcd.ie - 10/08/2014
 ##########################
+#Requirements:
+#-R 3
+#-R package "ape"
+##########################
 
 rTreeBind<-function(x, y, sample, root.age) {
 
