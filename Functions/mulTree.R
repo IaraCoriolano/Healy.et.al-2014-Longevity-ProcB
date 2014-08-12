@@ -306,10 +306,6 @@ if(mulTree.example == TRUE) {
     prior<-list(R = list(V = 1/2, nu=0.002), G = list(G1=list(V = 1/2, nu=0.002)))
     outpu<-"longevity"
     #mulTree
-<<<<<<< HEAD
     mulTree(longevity.data, formu, param, chains=2, prior, verbose=TRUE, output=outpu, warn=FALSE)
-=======
-    mulTree(longevity.data, formu, param, chains=2, prior, verbose=TRUE, output=outpu)
->>>>>>> FETCH_HEAD
 
 }
