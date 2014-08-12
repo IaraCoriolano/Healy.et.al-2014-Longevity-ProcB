@@ -2,7 +2,9 @@
 #Run MCMCglmm on a 'mulTree.data' object
 ##########################
 #Running a MCMCglmm model on a list of phylogenies and the data stored in a 'mulTree.data' object. The results can be written out of R environment as individual models.
-#v0.1.1
+#v0.1.3
+#Update: added convergence conditions
+#Update: typos and added warn option
 ##########################
 #SYNTAX :
 #<mulTree.data> a 'mulTree.data' object obtained from as.mulTree.data function
@@ -15,31 +17,28 @@
 #<ESS> a numerical value for assessing the effective sample size (default=1000)
 #<verbose> whether to be verbose or not (default=FALSE)
 #<output> any optional string of characters that will be used as chain name for the models output (default=FALSE)
+#<warn> whether to print the warning messages from the MCMCglmm function (default=TRUE)
 ##########################
 #----
-#guillert(at)tcd.ie & healyke(at)tcd.ie - 10/08/2014
+#guillert(at)tcd.ie & healyke(at)tcd.ie - 12/08/2014
 ##########################
 #Requirements:
 #-R 3
 #-R package "ape"
 #-R package "caper"
-#-R package "mvtnorm"
 #-R package "MCMCglmm"
-#-R package "modeest"
 #-R package "coda"
 ##########################
 
 
-mulTree<-function(mulTree.data, formula, parameters, chains=2, priors=NULL, ..., convergence=1.1, ESS=1000, verbose=FALSE, output=TRUE)
+mulTree<-function(mulTree.data, formula, parameters, chains=2, priors=NULL, ..., convergence=1.1, ESS=1000, verbose=FALSE, output=TRUE, warn=TRUE)
 {   #warning("ouput option doesn't accept 'FALSE' yet (change the return format)")
     #stop("IN DEVELOPEMENT")
 #HEADER
     #libraries
     require(ape)
     require(caper)
-    require(mvtnorm)
     require(coda)
-    require(modeest)
     require(MCMCglmm)
     #timer(start)
     start.time <- Sys.time()
@@ -147,13 +146,26 @@ mulTree<-function(mulTree.data, formula, parameters, chains=2, priors=NULL, ...,
             }
         }
     }
+
+    #warn
+    if(class(warn) != 'logical') {
+        stop("\"warn\" must be logical.", call.=FALSE) 
+    }
+
+
 #FUNCTION
 
 
-    FUN.MCMCglmm<-function(ntree, mulTree.data, formula, priors, parameters, ...){
+    FUN.MCMCglmm<-function(ntree, mulTree.data, formula, priors, parameters, warn, ...){
         require(MCMCglmm)
         #Model running using MCMCglmm function (MCMCglmm) on each tree [i] on two independent chains
+        if(warn == FALSE) {
+            options(warn=-1) #Disable warning for now
+        }
         model<-MCMCglmm(formula, random=~animal, pedigree=mulTree.data$phy[[ntree]], prior=priors, data=mulTree.data$data, verbose=FALSE, nitt=parameters[1], thin=parameters[2], burnin=parameters[3], ...)
+        if(warn == FALSE) {
+            options(warn=0) #Re-enable warnings
+        }
         return(model)
     }
 
@@ -190,7 +202,7 @@ mulTree<-function(mulTree.data, formula, parameters, chains=2, priors=NULL, ...,
         
         #Running the model for one tree
         for (nchains in 1:chains) {
-            model_chain<-FUN.MCMCglmm(ntree, mulTree.data, formula, priors, parameters, ...)
+            model_chain<-FUN.MCMCglmm(ntree, mulTree.data, formula, priors, parameters, ..., warn)
             assign(paste("model_chain", nchains, sep=""), model_chain)
         }
 
@@ -209,7 +221,7 @@ mulTree<-function(mulTree.data, formula, parameters, chains=2, priors=NULL, ...,
         }
 
         #Saving convergence
-        if(do.output == TRUE) {
+        if(do.output == TRUE & multiple.chains == TRUE) {
             save(converge.test, file=file.names.conv[ntree])
         }
 
@@ -219,9 +231,9 @@ mulTree<-function(mulTree.data, formula, parameters, chains=2, priors=NULL, ...,
             if(multiple.chains == TRUE) {
                 cat("Convergence diagnosis:\n")
                 cat("Effective sample size is > ", ESS, ": ", all(effectiveSize(model$Sol[])>ESS), "\n", sep="")
-                effectiveSize(get(paste("model_chain",nchains,sep=""))$Sol[])
+                cat(effectiveSize(get(paste("model_chain",nchains,sep=""))$Sol[]), "\n", sep=" ")
                 cat("All levels converged < ", convergence, ": ", all(converge.test$psrf[,1]<convergence), "\n", sep="")
-                converge.test$psrf[,1]
+                cat(converge.test$psrf[,1], "\n", sep=" ")
             }
             if(do.output == TRUE){
                 if(multiple.chains == TRUE) {
@@ -283,7 +295,7 @@ if(mulTree.example == TRUE) {
     prior<-list(R = list(V = 1/2, nu=0.002), G = list(G1=list(V = 1/2, nu=0.002)))
 
     #mulTree
-    mulTree(mulTree_data, form, param, priors=prior, verbose=TRUE)
+    mulTree(mulTree_data, form, param, priors=prior, verbose=TRUE, warn=FALSE)
 
     #EMPIRICAL EXAMPLE
     mam_aves_tres<-read.tree("example/10trees_mammal-aves.tre")
@@ -294,6 +306,6 @@ if(mulTree.example == TRUE) {
     prior<-list(R = list(V = 1/2, nu=0.002), G = list(G1=list(V = 1/2, nu=0.002)))
     outpu<-"longevity"
     #mulTree
-    mulTree(longevity.data, formu, param, chains=2, priors, verbose=TRUE, output=outpu)
+    mulTree(longevity.data, formu, param, chains=2, prior, verbose=TRUE, output=outpu, warn=FALSE)
 
 }
