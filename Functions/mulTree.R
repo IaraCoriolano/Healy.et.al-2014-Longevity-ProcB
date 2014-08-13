@@ -2,9 +2,10 @@
 #Run MCMCglmm on a 'mulTree.data' object
 ##########################
 #Running a MCMCglmm model on a list of phylogenies and the data stored in a 'mulTree.data' object. The results can be written out of R environment as individual models.
-#v0.1.3
+#v0.1.4
 #Update: added convergence conditions
 #Update: typos and added warn option
+#Update: fixed timing management
 ##########################
 #SYNTAX :
 #<mulTree.data> a 'mulTree.data' object obtained from as.mulTree.data function
@@ -20,7 +21,7 @@
 #<warn> whether to print the warning messages from the MCMCglmm function (default=TRUE)
 ##########################
 #----
-#guillert(at)tcd.ie & healyke(at)tcd.ie - 12/08/2014
+#guillert(at)tcd.ie & healyke(at)tcd.ie - 13/08/2014
 ##########################
 #Requirements:
 #-R 3
@@ -251,19 +252,19 @@ mulTree<-function(mulTree.data, formula, parameters, chains=2, priors=NULL, ...,
 
     #timer (end)
     end.time <- Sys.time()
-    execution.time<- end.time - start.time
+    execution.time<- difftime(end.time,start.time, units="secs")
 
     #verbose
     if(verbose==TRUE) {
         cat("\n",format(Sys.Date())," - ",format(Sys.time(), "%H:%M:%S"), ":", " MCMCglmm successfully performed on ", length(mulTree.data$phy), " trees.\n",sep="")
         if (execution.time[[1]] < 60) {
-            cat("Total execution time: ", execution.time[[1]], " secs.\n", sep="") 
+            cat("Total execution time: ", execution.time[[1]], " secs.\n", sep="")
         } else {
             if (execution.time[[1]] > 60 & execution.time[[1]] < 3600) {
                 cat("Total execution time: ", execution.time[[1]]/60, " mins.\n", sep="") 
             } else {
                 if (execution.time[[1]] > 3600 & execution.time[[1]] < 86400) {
-                    cat("Total execution time: ", execution.time[[1]]/3600, " hours.\n", sep="")
+                   cat("Total execution time: ", execution.time[[1]]/3600, " hours.\n", sep="")
                 } else {
                     if (execution.time[[1]] > 86400) {
                         cat("Total execution time: ", execution.time[[1]]/86400, " days.\n", sep="")
