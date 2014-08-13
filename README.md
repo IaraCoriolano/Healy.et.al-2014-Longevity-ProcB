@@ -6,9 +6,9 @@ The functions available in the repository where the ones used in Healy et al 201
 A new and corrected version is available in the mulTree repository and useable in R.
 
 To install on R:
-\code{install.packages("devtools")}
-\code{install_github("TGuillerme/mulTree")}
-\code{library(mulTree)}
+install.packages("devtools")
+install_github("TGuillerme/mulTree")
+library(mulTree)
 
 
 These following R functions were used in Healy et al 2014 Proc.B.
