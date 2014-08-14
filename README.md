@@ -1,23 +1,8 @@
-================================
 Healy.et.al-2014-Longevity-ProcB
 ================================
 
 The functions available in the repository where the ones used in Healy et al 2014 Proc.B.
-A new and corrected version is available in the mulTree repository and useable in R.
-
-To install on R:
-
-install.packages("devtools")
-
-install_github("TGuillerme/mulTree")
-
-library(mulTree)
-
-
-
 These following R functions were used in Healy et al 2014 Proc.B.
-They allow to run comparative analysis for multiple trees from a
-Bayesian tree building distribution (instead of using the consensus tree).
+They allow to run comparative analysis for multiple trees from a Bayesian postrior distribution trees distribution (instead of using the consensus tree).
 
-The code is based on MCMCglmm package.
-
+A new and corrected version is available in the [mulTree](https://github.com/TGuillerme/mulTree) repository and useable in R.
